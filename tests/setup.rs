@@ -108,6 +108,18 @@ where
             },
         );
     }
+
+    #[allow(dead_code)]
+    pub fn claim_outputs(&mut self, address: &Address) -> TxResult {
+        return self.blockchain_wrapper.execute_tx(
+            address,
+            &self.contract_wrapper,
+            &rust_biguint!(0),
+            |sc| {
+                sc.claim_outputs_tokens();
+            },
+        );
+    }
 }
 
 #[allow(dead_code)]

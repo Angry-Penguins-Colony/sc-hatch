@@ -72,24 +72,24 @@ pub trait SwapEsdt {
     #[endpoint]
     #[only_owner]
     fn claim_inputs_tokens(&self) {
+        self.claim_tokens(&self.input_token().get(), self.input_nonce().get());
+    }
+
+    #[endpoint]
+    #[only_owner]
+    fn claim_outputs_tokens(&self) {
+        self.claim_tokens(&self.output_token().get(), self.output_nonce().get());
+    }
+
+    fn claim_tokens(&self, token: &TokenIdentifier, nonce: u64) {
         self.blockchain().check_caller_is_owner();
 
-        let balance = self
-            .blockchain()
-            .get_sc_balance(&self.input_token().get(), self.input_nonce().get());
+        let balance = self.blockchain().get_sc_balance(token, nonce);
 
-        // STEP 2 : require balance > 0
         require!(balance > 0, ERR_CLAIM_INPUT_BALANCE_EMPTY);
 
-        // STEP 3 : send balance to owner
         let owner = self.blockchain().get_owner_address();
-        self.send().direct(
-            &owner,
-            &self.input_token().get(),
-            self.input_nonce().get(),
-            &balance,
-            &[],
-        );
+        self.send().direct(&owner, token, nonce, &balance, &[]);
     }
 
     #[endpoint]
