@@ -5,8 +5,10 @@ use elrond_wasm::{
 use elrond_wasm_debug::{rust_biguint, testing_framework::*, tx_mock::TxResult, DebugApi};
 use sc_swap_esdt::SwapEsdt;
 
+#[allow(dead_code)]
 const WASM_PATH: &'static str = "output/swap_esdt.wasm";
 
+#[allow(dead_code)]
 pub struct ContractSetup<ContractObjBuilder>
 where
     ContractObjBuilder: 'static + Copy + Fn() -> sc_swap_esdt::ContractObj<DebugApi>,
@@ -26,6 +28,7 @@ impl<ContractObjBuilder> ContractSetup<ContractObjBuilder>
 where
     ContractObjBuilder: 'static + Copy + Fn() -> sc_swap_esdt::ContractObj<DebugApi>,
 {
+    #[allow(dead_code)]
     pub fn swap(&mut self, token_id: &[u8], nonce: u64) -> TxResult {
         self.blockchain_wrapper.set_nft_balance(
             &self.user_lambda,
@@ -51,6 +54,7 @@ where
         );
     }
 
+    #[allow(dead_code)]
     pub fn fill_manual(
         &mut self,
         address: &Address,
@@ -82,6 +86,7 @@ where
         );
     }
 
+    #[allow(dead_code)]
     pub fn fill(&mut self, balance: u64) {
         self.fill_manual(
             &self.owner_address.clone(),
@@ -93,6 +98,7 @@ where
     }
 }
 
+#[allow(dead_code)]
 pub fn setup_contract<ContractObjBuilder>(
     cf_builder: ContractObjBuilder,
 ) -> ContractSetup<ContractObjBuilder>
