@@ -22,6 +22,15 @@ fn fill() {
             &setup.output_token,
             setup.output_nonce
         ),
+        rust_biguint!(0u64)
+    );
+
+    assert_eq!(
+        setup.blockchain_wrapper.get_esdt_balance(
+            &setup.contract_wrapper.address_ref(),
+            &setup.output_token,
+            setup.output_nonce
+        ),
         rust_biguint!(1u64)
     );
 }
@@ -46,7 +55,7 @@ fn fill_while_bad_nonce() {
 
     setup
         .fill_output_manual(
-            &setup.user_lambda.clone(),
+            &setup.owner_address.clone(),
             &setup.output_token.clone(),
             setup.output_nonce.clone() + 1,
             1u64,
@@ -64,7 +73,7 @@ fn fill_while_bad_token() {
 
     setup
         .fill_output_manual(
-            &setup.user_lambda.clone(),
+            &setup.owner_address.clone(),
             bad_token,
             setup.output_nonce.clone(),
             1u64,
