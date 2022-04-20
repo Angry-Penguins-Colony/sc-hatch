@@ -29,12 +29,12 @@ where
     ContractObjBuilder: 'static + Copy + Fn() -> sc_swap_esdt::ContractObj<DebugApi>,
 {
     #[allow(dead_code)]
-    pub fn swap(&mut self, token_id: &[u8], nonce: u64) -> TxResult {
+    pub fn swap(&mut self, token_id: &[u8], nonce: u64, balance: u64) -> TxResult {
         self.blockchain_wrapper.set_nft_balance(
             &self.user_lambda,
             token_id,
             nonce,
-            &rust_biguint!(1),
+            &rust_biguint!(balance),
             &{},
         );
 
@@ -43,7 +43,7 @@ where
             &self.contract_wrapper,
             token_id,
             nonce,
-            &rust_biguint!(1),
+            &rust_biguint!(balance),
             |sc| {
                 sc.swap(
                     sc.call_value().esdt_value(),
