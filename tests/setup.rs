@@ -13,6 +13,7 @@ where
 {
     pub blockchain_wrapper: BlockchainStateWrapper,
     pub owner_address: Address,
+    pub user_lambda: Address,
     pub contract_wrapper:
         ContractObjWrapper<sc_swap_esdt::ContractObj<DebugApi>, ContractObjBuilder>,
     pub input_token: [u8; 11],
@@ -27,7 +28,7 @@ where
 {
     pub fn swap(&mut self, token_id: &[u8], nonce: u64) -> TxResult {
         self.blockchain_wrapper.set_nft_balance(
-            &self.owner_address,
+            &self.user_lambda,
             token_id,
             nonce,
             &rust_biguint!(1),
@@ -35,7 +36,7 @@ where
         );
 
         return self.blockchain_wrapper.execute_esdt_transfer(
-            &self.owner_address,
+            &self.user_lambda,
             &self.contract_wrapper,
             token_id,
             nonce,
@@ -48,6 +49,47 @@ where
                 )
             },
         );
+    }
+
+    pub fn fill_manual(
+        &mut self,
+        address: &Address,
+        token_id: &[u8],
+        nonce: u64,
+        balance: u64,
+    ) -> TxResult {
+        self.blockchain_wrapper.set_nft_balance(
+            address,
+            token_id,
+            nonce,
+            &rust_biguint!(balance),
+            &{},
+        );
+
+        return self.blockchain_wrapper.execute_esdt_transfer(
+            address,
+            &self.contract_wrapper,
+            token_id,
+            nonce,
+            &rust_biguint!(balance),
+            |sc| {
+                sc.fill(
+                    sc.call_value().esdt_value(),
+                    sc.call_value().token(),
+                    sc.call_value().esdt_token_nonce(),
+                )
+            },
+        );
+    }
+
+    pub fn fill(&mut self, balance: u64) {
+        self.fill_manual(
+            &self.owner_address.clone(),
+            &self.output_token.clone(),
+            self.output_nonce.clone(),
+            balance,
+        )
+        .assert_ok();
     }
 }
 
@@ -67,6 +109,7 @@ where
     let rust_zero = rust_biguint!(0u64);
     let mut blockchain_wrapper = BlockchainStateWrapper::new();
     let owner_address = blockchain_wrapper.create_user_account(&rust_zero);
+    let user_lambda = blockchain_wrapper.create_user_account(&rust_zero);
     let cf_wrapper = blockchain_wrapper.create_sc_account(
         &rust_zero,
         Some(&owner_address),
@@ -95,5 +138,6 @@ where
         input_nonce,
         output_token,
         output_nonce,
+        user_lambda,
     }
 }
