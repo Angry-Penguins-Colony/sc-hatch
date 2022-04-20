@@ -7,7 +7,7 @@ use setup::*;
 fn should_swap() {
     let mut setup = setup_contract(sc_swap_esdt::contract_obj);
 
-    setup.fill(1u64);
+    setup.fill_output(1u64);
 
     let token_id = setup.input_token;
     setup.swap(&token_id, setup.input_nonce).assert_ok();
@@ -26,7 +26,7 @@ fn should_swap() {
 fn should_err_bad_nonce() {
     let mut setup = setup_contract(sc_swap_esdt::contract_obj);
 
-    setup.fill(1u64);
+    setup.fill_output(1u64);
 
     let token_id = setup.input_token;
     setup
@@ -38,7 +38,7 @@ fn should_err_bad_nonce() {
 fn should_err_bad_token() {
     let mut setup = setup_contract(sc_swap_esdt::contract_obj);
 
-    setup.fill(1u64);
+    setup.fill_output(1u64);
 
     let bad_token = b"HEENOK-667";
 

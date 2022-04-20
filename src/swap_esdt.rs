@@ -11,6 +11,8 @@ pub const ERR_SWAP_NO_OUTPUT_TOKEN: &str = "There is nothing to swap. The balanc
 pub const ERR_FILL_BAD_NONCE: &str = "The token nonce sent is not the one expected";
 pub const ERR_FILL_BAD_TOKEN: &str = "The token identifier sent is not the one expected";
 
+pub const ERR_CLAIM_INPUT_BALANCE_EMPTY: &str = "The input balance is empty.";
+
 /// An empty contract. To be used as a template when starting a new contract from scratch.
 #[elrond_wasm::derive::contract]
 pub trait SwapEsdt {
@@ -53,19 +55,39 @@ pub trait SwapEsdt {
 
     #[endpoint]
     #[only_owner]
-    fn claim_eggs(&self) {
-        sc_panic!("Not implemented");
+    fn claim_inputs_tokens(&self) {
+        self.blockchain().check_caller_is_owner();
+
+        let balance = self
+            .blockchain()
+            .get_sc_balance(&self.input_token().get(), self.input_nonce().get());
+
+        // STEP 2 : require balance > 0
+        require!(balance > 0, ERR_CLAIM_INPUT_BALANCE_EMPTY);
+
+        // STEP 3 : send balance to owner
+        let owner = self.blockchain().get_owner_address();
+        self.send().direct(
+            &owner,
+            &self.input_token().get(),
+            self.input_nonce().get(),
+            &balance,
+            &[],
+        );
     }
 
     #[endpoint]
     #[payable("*")]
     #[only_owner]
-    fn fill(
+    fn fill_output(
         &self,
-        #[payment] payment: BigUint,
+        #[payment] _payment: BigUint,
         #[payment_token] token: TokenIdentifier,
         #[payment_nonce] nonce: u64,
     ) {
-        sc_panic!("Not implemented");
+        self.blockchain().check_caller_is_owner();
+
+        require!(token == self.output_token().get(), ERR_FILL_BAD_TOKEN);
+        require!(nonce == self.output_nonce().get(), ERR_FILL_BAD_NONCE);
     }
 }

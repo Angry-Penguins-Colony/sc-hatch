@@ -55,7 +55,7 @@ where
     }
 
     #[allow(dead_code)]
-    pub fn fill_manual(
+    pub fn fill_output_manual(
         &mut self,
         address: &Address,
         token_id: &[u8],
@@ -77,7 +77,7 @@ where
             nonce,
             &rust_biguint!(balance),
             |sc| {
-                sc.fill(
+                sc.fill_output(
                     sc.call_value().esdt_value(),
                     sc.call_value().token(),
                     sc.call_value().esdt_token_nonce(),
@@ -87,8 +87,8 @@ where
     }
 
     #[allow(dead_code)]
-    pub fn fill(&mut self, balance: u64) {
-        self.fill_manual(
+    pub fn fill_output(&mut self, balance: u64) {
+        self.fill_output_manual(
             &self.owner_address.clone(),
             &self.output_token.clone(),
             self.output_nonce.clone(),
@@ -98,13 +98,13 @@ where
     }
 
     #[allow(dead_code)]
-    pub fn claim(&mut self, address: &Address) -> TxResult {
+    pub fn claim_inputs(&mut self, address: &Address) -> TxResult {
         return self.blockchain_wrapper.execute_tx(
             address,
             &self.contract_wrapper,
             &rust_biguint!(0),
             |sc| {
-                sc.claim_eggs();
+                sc.claim_inputs_tokens();
             },
         );
     }

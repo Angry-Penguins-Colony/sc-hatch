@@ -8,7 +8,7 @@ fn fill() {
     let mut setup = setup_contract(sc_swap_esdt::contract_obj);
 
     setup
-        .fill_manual(
+        .fill_output_manual(
             &setup.owner_address.clone(),
             &setup.output_token.clone(),
             setup.output_nonce.clone(),
@@ -31,7 +31,7 @@ fn fill_while_not_owner() {
     let mut setup = setup_contract(sc_swap_esdt::contract_obj);
 
     setup
-        .fill_manual(
+        .fill_output_manual(
             &setup.user_lambda.clone(),
             &setup.output_token.clone(),
             setup.output_nonce.clone(),
@@ -45,7 +45,7 @@ fn fill_while_bad_nonce() {
     let mut setup = setup_contract(sc_swap_esdt::contract_obj);
 
     setup
-        .fill_manual(
+        .fill_output_manual(
             &setup.user_lambda.clone(),
             &setup.output_token.clone(),
             setup.output_nonce.clone() + 1,
@@ -63,7 +63,7 @@ fn fill_while_bad_token() {
     assert_ne!(bad_token.len(), setup.input_token.len());
 
     setup
-        .fill_manual(
+        .fill_output_manual(
             &setup.user_lambda.clone(),
             bad_token,
             setup.output_nonce.clone(),
