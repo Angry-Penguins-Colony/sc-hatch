@@ -50,7 +50,23 @@ pub trait SwapEsdt {
         #[payment_token] token: TokenIdentifier,
         #[payment_nonce] nonce: u64,
     ) {
-        sc_panic!("Not implemented");
+        require!(token == self.input_token().get(), ERR_SWAP_BAD_TOKEN);
+        require!(nonce == self.input_nonce().get(), ERR_SWAP_BAD_NONCE);
+
+        let output_balance = self
+            .blockchain()
+            .get_sc_balance(&self.output_token().get(), self.output_nonce().get());
+
+        require!(output_balance >= payment, ERR_SWAP_NO_OUTPUT_TOKEN);
+
+        let caller = self.blockchain().get_caller();
+        self.send().direct(
+            &caller,
+            &self.output_token().get(),
+            self.output_nonce().get(),
+            &payment,
+            &[],
+        );
     }
 
     #[endpoint]

@@ -9,14 +9,32 @@ fn should_swap() {
 
     setup.fill_output(1u64);
 
-    let token_id = setup.input_token;
-    setup.swap(&token_id, setup.input_nonce).assert_ok();
+    let input_token = setup.input_token;
+    setup.swap(&input_token, setup.input_nonce).assert_ok();
 
     assert_eq!(
         setup.blockchain_wrapper.get_esdt_balance(
-            &setup.owner_address,
-            &token_id,
+            &setup.user_lambda,
+            &input_token,
             setup.input_nonce
+        ),
+        rust_biguint!(0)
+    );
+
+    assert_eq!(
+        setup.blockchain_wrapper.get_esdt_balance(
+            &setup.contract_wrapper.address_ref(),
+            &input_token,
+            setup.input_nonce
+        ),
+        rust_biguint!(1)
+    );
+
+    assert_eq!(
+        setup.blockchain_wrapper.get_esdt_balance(
+            &setup.user_lambda,
+            &setup.output_token.clone(),
+            setup.output_nonce
         ),
         rust_biguint!(1)
     );
