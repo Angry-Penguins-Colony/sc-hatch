@@ -1,5 +1,8 @@
-use elrond_wasm::types::{Address, TokenIdentifier};
-use elrond_wasm_debug::{rust_biguint, testing_framework::*, DebugApi};
+use elrond_wasm::{
+    contract_base::ContractBase,
+    types::{Address, TokenIdentifier},
+};
+use elrond_wasm_debug::{rust_biguint, testing_framework::*, tx_mock::TxResult, DebugApi};
 use sc_swap_esdt::SwapEsdt;
 
 const WASM_PATH: &'static str = "output/swap_esdt.wasm";
@@ -16,6 +19,36 @@ where
     pub input_nonce: u64,
     pub output_token: [u8; 13],
     pub output_nonce: u64,
+}
+
+impl<ContractObjBuilder> ContractSetup<ContractObjBuilder>
+where
+    ContractObjBuilder: 'static + Copy + Fn() -> sc_swap_esdt::ContractObj<DebugApi>,
+{
+    pub fn swap(&mut self, token_id: &[u8], nonce: u64) -> TxResult {
+        self.blockchain_wrapper.set_nft_balance(
+            &self.owner_address,
+            token_id,
+            nonce,
+            &rust_biguint!(1),
+            &{},
+        );
+
+        return self.blockchain_wrapper.execute_esdt_transfer(
+            &self.owner_address,
+            &self.contract_wrapper,
+            token_id,
+            nonce,
+            &rust_biguint!(1),
+            |sc| {
+                sc.swap(
+                    sc.call_value().esdt_value(),
+                    sc.call_value().token(),
+                    sc.call_value().esdt_token_nonce(),
+                )
+            },
+        );
+    }
 }
 
 pub fn setup_contract<ContractObjBuilder>(

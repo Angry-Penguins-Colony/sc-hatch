@@ -2,6 +2,10 @@
 
 elrond_wasm::imports!();
 
+pub const ERR_BAD_NONCE: &str = "The token nonce sent is not the one expected";
+pub const ERR_BAD_TOKEN: &str = "The token identifier sent is not the one expected";
+pub const ERR_NO_OUTPUT_TOKEN: &str = "There is nothing to swap. The balance is empty.";
+
 /// An empty contract. To be used as a template when starting a new contract from scratch.
 #[elrond_wasm::derive::contract]
 pub trait SwapEsdt {

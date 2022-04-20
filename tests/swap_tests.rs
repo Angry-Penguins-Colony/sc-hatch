@@ -1,37 +1,44 @@
 mod setup;
 
-use elrond_wasm::contract_base::ContractBase;
-use elrond_wasm_debug::rust_biguint;
-use sc_swap_esdt::SwapEsdt;
 use setup::*;
 
 #[test]
 fn should_swap() {
     let mut setup = setup_contract(sc_swap_esdt::contract_obj);
 
-    setup.blockchain_wrapper.set_nft_balance(
-        &setup.owner_address,
-        &setup.input_token,
-        setup.input_nonce,
-        &rust_biguint!(1),
-        &{},
-    );
+    let token_id = setup.input_token;
+    setup.swap(&token_id, setup.input_nonce).assert_ok();
+}
+
+#[test]
+fn should_err_bad_nonce() {
+    let mut setup = setup_contract(sc_swap_esdt::contract_obj);
+
+    let token_id = setup.input_token;
+    setup
+        .swap(&token_id, setup.input_nonce + 1)
+        .assert_user_error(sc_swap_esdt::ERR_BAD_NONCE);
+}
+
+#[test]
+fn should_err_bad_token() {
+    let mut setup = setup_contract(sc_swap_esdt::contract_obj);
+
+    let bad_token = b"HEENOK-667";
+
+    assert_ne!(bad_token.len(), setup.input_token.len());
 
     setup
-        .blockchain_wrapper
-        .execute_esdt_transfer(
-            &setup.owner_address,
-            &setup.contract_wrapper,
-            &setup.input_token,
-            setup.input_nonce,
-            &rust_biguint!(1),
-            |sc| {
-                sc.swap(
-                    sc.call_value().esdt_value(),
-                    sc.call_value().token(),
-                    sc.call_value().esdt_token_nonce(),
-                )
-            },
-        )
-        .assert_ok();
+        .swap(bad_token, setup.input_nonce)
+        .assert_user_error(sc_swap_esdt::ERR_BAD_TOKEN);
+}
+
+#[test]
+fn should_err_no_output_token() {
+    let mut setup = setup_contract(sc_swap_esdt::contract_obj);
+
+    let token_id = setup.input_token;
+    setup
+        .swap(&token_id, setup.input_nonce)
+        .assert_user_error(sc_swap_esdt::ERR_NO_OUTPUT_TOKEN);
 }
