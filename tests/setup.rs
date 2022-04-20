@@ -96,6 +96,18 @@ where
         )
         .assert_ok();
     }
+
+    #[allow(dead_code)]
+    pub fn claim(&mut self, address: &Address) -> TxResult {
+        return self.blockchain_wrapper.execute_tx(
+            address,
+            &self.contract_wrapper,
+            &rust_biguint!(0),
+            |sc| {
+                sc.claim_eggs();
+            },
+        );
+    }
 }
 
 #[allow(dead_code)]
