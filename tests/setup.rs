@@ -12,9 +12,9 @@ where
     pub owner_address: Address,
     pub contract_wrapper:
         ContractObjWrapper<sc_swap_esdt::ContractObj<DebugApi>, ContractObjBuilder>,
-    pub input_token: TokenIdentifier<DebugApi>,
+    pub input_token: [u8; 11],
     pub input_nonce: u64,
-    pub output_token: TokenIdentifier<DebugApi>,
+    pub output_token: [u8; 13],
     pub output_nonce: u64,
 }
 
@@ -26,9 +26,9 @@ where
 {
     DebugApi::dummy();
 
-    let input_token = TokenIdentifier::from_esdt_bytes(b"INPUT-00000");
+    let input_token = *b"INPUT-00000";
     let input_nonce = 1;
-    let output_token = TokenIdentifier::from_esdt_bytes(b"OUTPUT-aaaaaa");
+    let output_token = *b"OUTPUT-aaaaaa";
     let output_nonce = 1;
 
     let rust_zero = rust_biguint!(0u64);
@@ -44,9 +44,9 @@ where
     blockchain_wrapper
         .execute_tx(&owner_address, &cf_wrapper, &rust_zero, |sc| {
             sc.init(
-                input_token.clone(),
+                TokenIdentifier::from_esdt_bytes(&input_token),
                 input_nonce,
-                output_token.clone(),
+                TokenIdentifier::from_esdt_bytes(&output_token),
                 output_nonce,
             );
         })

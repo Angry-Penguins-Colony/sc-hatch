@@ -31,9 +31,9 @@ pub trait SwapEsdt {
         self.output_nonce().set(output_nonce);
     }
 
-    #[endpoint]
+    #[endpoint(hatch)]
     #[payable("*")]
-    fn hatch(
+    fn swap(
         &self,
         #[payment] payment: BigUint,
         #[payment_token] token: TokenIdentifier,

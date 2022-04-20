@@ -1,1 +1,1 @@
-cargo test --package sc-swap-esdt --test *_test
+cargo test --package sc-swap-esdt --test *_tests
