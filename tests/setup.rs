@@ -21,7 +21,6 @@ where
     pub input_token: [u8; 11],
     pub input_nonce: u64,
     pub output_token: [u8; 13],
-    pub output_nonce: u64,
 }
 
 impl<ContractObjBuilder> ContractSetup<ContractObjBuilder>
@@ -87,11 +86,11 @@ where
     }
 
     #[allow(dead_code)]
-    pub fn fill_output(&mut self, balance: u64) {
+    pub fn fill_output(&mut self, balance: u64, nonce: u64) {
         self.fill_output_manual(
             &self.owner_address.clone(),
             &self.output_token.clone(),
-            self.output_nonce.clone(),
+            nonce,
             balance,
         )
         .assert_ok();
@@ -134,7 +133,6 @@ where
     let input_token = *b"INPUT-00000";
     let input_nonce = 1;
     let output_token = *b"OUTPUT-aaaaaa";
-    let output_nonce = 1;
 
     let rust_zero = rust_biguint!(0u64);
     let mut blockchain_wrapper = BlockchainStateWrapper::new();
@@ -153,7 +151,6 @@ where
                 TokenIdentifier::from_esdt_bytes(&input_token),
                 input_nonce,
                 TokenIdentifier::from_esdt_bytes(&output_token),
-                output_nonce,
             );
         })
         .assert_ok();
@@ -167,7 +164,6 @@ where
         input_token,
         input_nonce,
         output_token,
-        output_nonce,
         user_lambda,
     }
 }

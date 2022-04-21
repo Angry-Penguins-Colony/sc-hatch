@@ -7,7 +7,8 @@ use setup::*;
 fn should_swap() {
     let mut setup = setup_contract(sc_swap_esdt::contract_obj);
 
-    setup.fill_output(1u64);
+    let nonce = 1u64;
+    setup.fill_output(1u64, 1u64);
 
     let input_token = setup.input_token;
     setup.swap(&input_token, setup.input_nonce, 1).assert_ok();
@@ -34,7 +35,7 @@ fn should_swap() {
         setup.blockchain_wrapper.get_esdt_balance(
             &setup.user_lambda,
             &setup.output_token.clone(),
-            setup.output_nonce
+            nonce
         ),
         rust_biguint!(1)
     );
@@ -44,10 +45,17 @@ fn should_swap() {
 fn should_swap_five() {
     let mut setup = setup_contract(sc_swap_esdt::contract_obj);
 
-    setup.fill_output(5u64);
+    let nonces = [1, 2, 3];
+
+    for n in nonces {
+        setup.fill_output(1u64, n);
+    }
 
     let input_token = setup.input_token;
-    setup.swap(&input_token, setup.input_nonce, 5).assert_ok();
+
+    for _ in nonces {
+        setup.swap(&input_token, setup.input_nonce, 1).assert_ok();
+    }
 
     assert_eq!(
         setup.blockchain_wrapper.get_esdt_balance(
@@ -64,24 +72,26 @@ fn should_swap_five() {
             &input_token,
             setup.input_nonce
         ),
-        rust_biguint!(5)
+        rust_biguint!(nonces.len())
     );
 
-    assert_eq!(
-        setup.blockchain_wrapper.get_esdt_balance(
-            &setup.user_lambda,
-            &setup.output_token.clone(),
-            setup.output_nonce
-        ),
-        rust_biguint!(5)
-    );
+    for n in nonces {
+        assert_eq!(
+            setup.blockchain_wrapper.get_esdt_balance(
+                &setup.user_lambda,
+                &setup.output_token.clone(),
+                n
+            ),
+            rust_biguint!(1)
+        );
+    }
 }
 
 #[test]
 fn should_err_bad_nonce() {
     let mut setup = setup_contract(sc_swap_esdt::contract_obj);
 
-    setup.fill_output(1u64);
+    setup.fill_output(1u64, 1u64);
 
     let token_id = setup.input_token;
     setup
@@ -93,7 +103,7 @@ fn should_err_bad_nonce() {
 fn should_err_bad_token() {
     let mut setup = setup_contract(sc_swap_esdt::contract_obj);
 
-    setup.fill_output(1u64);
+    setup.fill_output(1u64, 1u64);
 
     let bad_token = b"HEENOK-667";
 

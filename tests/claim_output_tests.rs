@@ -4,48 +4,44 @@ use elrond_wasm_debug::rust_biguint;
 use setup::*;
 
 #[test]
-fn claim() {
+fn claim_output() {
     let mut setup = setup_contract(sc_swap_esdt::contract_obj);
 
-    setup.blockchain_wrapper.set_nft_balance(
-        &setup.contract_wrapper.address_ref(),
-        &setup.output_token.clone(),
-        setup.output_nonce.clone(),
-        &rust_biguint!(5u64),
-        &{},
-    );
+    let nonce = 1u64;
+
+    setup.fill_output(1u64, nonce);
 
     setup
         .claim_outputs(&setup.owner_address.clone())
         .assert_ok();
 
     assert_eq!(
-        setup.blockchain_wrapper.get_esdt_balance(
-            &setup.owner_address,
-            &setup.output_token,
-            setup.output_nonce
-        ),
-        rust_biguint!(5u64)
+        setup
+            .blockchain_wrapper
+            .get_esdt_balance(&setup.owner_address, &setup.output_token, nonce),
+        rust_biguint!(1u64)
     );
 
     assert_eq!(
         setup.blockchain_wrapper.get_esdt_balance(
             &setup.contract_wrapper.address_ref(),
             &setup.output_token,
-            setup.output_nonce
+            nonce
         ),
         rust_biguint!(0u64)
     );
 }
 
 #[test]
-fn claim_while_not_owned() {
+fn claim_output_while_not_owned() {
     let mut setup = setup_contract(sc_swap_esdt::contract_obj);
+
+    let nonce = 1u64;
 
     setup.blockchain_wrapper.set_nft_balance(
         &setup.contract_wrapper.address_ref(),
         &setup.output_token.clone(),
-        setup.output_nonce.clone(),
+        nonce,
         &rust_biguint!(5u64),
         &{},
     );

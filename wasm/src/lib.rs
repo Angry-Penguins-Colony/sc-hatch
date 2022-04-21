@@ -5,8 +5,12 @@
 #![no_std]
 
 elrond_wasm_node::wasm_endpoints! {
-    empty
+    sc_swap_esdt
     (
+        claim_inputs_tokens
+        claim_outputs_tokens
+        fill_output
+        hatch
     )
 }
 
