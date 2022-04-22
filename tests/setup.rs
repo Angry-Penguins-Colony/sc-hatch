@@ -60,6 +60,7 @@ where
         token_id: &[u8],
         nonce: u64,
         balance: u64,
+        input_nonce: u64,
     ) -> TxResult {
         self.blockchain_wrapper.set_nft_balance(
             address,
@@ -80,18 +81,20 @@ where
                     sc.call_value().esdt_value(),
                     sc.call_value().token(),
                     sc.call_value().esdt_token_nonce(),
+                    input_nonce,
                 )
             },
         );
     }
 
     #[allow(dead_code)]
-    pub fn fill_output(&mut self, balance: u64, nonce: u64) {
+    pub fn fill_output(&mut self, balance: u64, nonce: u64, input_nonce: u64) {
         self.fill_output_manual(
             &self.owner_address.clone(),
             &self.output_token.clone(),
             nonce,
             balance,
+            input_nonce,
         )
         .assert_ok();
     }
@@ -109,13 +112,13 @@ where
     }
 
     #[allow(dead_code)]
-    pub fn claim_outputs(&mut self, address: &Address) -> TxResult {
+    pub fn claim_outputs(&mut self, address: &Address, input_nonce: u64) -> TxResult {
         return self.blockchain_wrapper.execute_tx(
             address,
             &self.contract_wrapper,
             &rust_biguint!(0),
             |sc| {
-                sc.claim_outputs_tokens();
+                sc.claim_outputs_tokens(input_nonce);
             },
         );
     }

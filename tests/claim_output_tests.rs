@@ -9,10 +9,11 @@ fn claim_output() {
 
     let nonce = 1u64;
 
-    setup.fill_output(1u64, nonce);
+    setup.fill_output(1u64, nonce, 1u64);
+    setup.fill_output(1u64, nonce + 1, 2u64);
 
     setup
-        .claim_outputs(&setup.owner_address.clone())
+        .claim_outputs(&setup.owner_address.clone(), 1u64)
         .assert_ok();
 
     assert_eq!(
@@ -29,6 +30,15 @@ fn claim_output() {
             nonce
         ),
         rust_biguint!(0u64)
+    );
+
+    assert_eq!(
+        setup.blockchain_wrapper.get_esdt_balance(
+            &setup.contract_wrapper.address_ref(),
+            &setup.output_token,
+            nonce + 1
+        ),
+        rust_biguint!(1u64)
     );
 }
 
@@ -47,6 +57,6 @@ fn claim_output_while_not_owned() {
     );
 
     setup
-        .claim_outputs(&setup.user_lambda.clone())
+        .claim_outputs(&setup.user_lambda.clone(), 1u64)
         .assert_user_error(sc_swap_esdt::ERR_NOT_OWNER);
 }

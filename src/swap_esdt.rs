@@ -27,7 +27,7 @@ pub trait SwapEsdt {
     fn output_token(&self) -> SingleValueMapper<TokenIdentifier>;
 
     #[storage_mapper("available_penguin_nonce")]
-    fn available_output_nonce(&self) -> VecMapper<u64>;
+    fn available_output_nonce(&self, input_nonce: u64) -> VecMapper<u64>;
 
     #[init]
     fn init(&self, input_token: TokenIdentifier, input_nonce: u64, output_token: TokenIdentifier) {
@@ -48,7 +48,7 @@ pub trait SwapEsdt {
         require!(nonce == self.input_nonce().get(), ERR_SWAP_BAD_NONCE);
 
         for _ in 0u64..payment.to_u64().unwrap() {
-            let nonce = self.get_random_nonce();
+            let nonce = self.get_random_nonce(nonce);
 
             let output_balance = self
                 .blockchain()
@@ -67,16 +67,17 @@ pub trait SwapEsdt {
         }
     }
 
-    fn get_random_nonce(&self) -> u64 {
-        let available_nfts_len = self.available_output_nonce().len();
+    fn get_random_nonce(&self, input_nonce: u64) -> u64 {
+        let available_nfts_len = self.available_output_nonce(input_nonce).len();
 
         require!(available_nfts_len > 0, ERR_SWAP_NO_OUTPUT_TOKEN);
 
         let mut rand_source = RandomnessSource::<Self::Api>::new();
         let random_index = rand_source.next_usize_in_range(0, available_nfts_len) + 1;
-        let random_nonce = self.available_output_nonce().get(random_index);
+        let random_nonce = self.available_output_nonce(input_nonce).get(random_index);
 
-        self.available_output_nonce().swap_remove(random_index);
+        self.available_output_nonce(input_nonce)
+            .swap_remove(random_index);
 
         return random_nonce;
     }
@@ -89,18 +90,18 @@ pub trait SwapEsdt {
 
     #[endpoint]
     #[only_owner]
-    fn claim_outputs_tokens(&self) {
+    fn claim_outputs_tokens(&self, input_nonce: u64) {
         self.blockchain().check_caller_is_owner();
 
         let owner = self.blockchain().get_owner_address();
         let one = BigUint::from(1u32);
 
-        for n in self.available_output_nonce().iter() {
+        for n in self.available_output_nonce(input_nonce).iter() {
             self.send()
                 .direct(&owner, &self.output_token().get(), n, &one, &[]);
         }
 
-        self.available_output_nonce().clear();
+        self.available_output_nonce(input_nonce).clear();
     }
 
     fn claim_tokens(&self, token: &TokenIdentifier, nonce: u64) {
@@ -122,12 +123,13 @@ pub trait SwapEsdt {
         #[payment] payment: BigUint,
         #[payment_token] token: TokenIdentifier,
         #[payment_nonce] nonce: u64,
+        input_nonce: u64,
     ) {
         self.blockchain().check_caller_is_owner();
 
         require!(token == self.output_token().get(), ERR_FILL_BAD_TOKEN);
         require!(payment == BigUint::from(1u32), ERR_FILL_BAD_PAYMENT);
 
-        self.available_output_nonce().push(&nonce);
+        self.available_output_nonce(input_nonce).push(&nonce);
     }
 }

@@ -15,6 +15,7 @@ fn fill() {
             &setup.output_token.clone(),
             nonce,
             1u64,
+            1u64,
         )
         .assert_ok();
 
@@ -45,6 +46,7 @@ fn fill_while_not_owner() {
             &setup.output_token.clone(),
             1u64,
             1u64,
+            1u64,
         )
         .assert_user_error(sc_swap_esdt::ERR_NOT_OWNER);
 }
@@ -59,6 +61,7 @@ fn fill_with_bad_balance() {
             &setup.output_token.clone(),
             1u64,
             2u64,
+            1u64,
         )
         .assert_user_error(sc_swap_esdt::ERR_FILL_BAD_PAYMENT);
 }
@@ -72,6 +75,6 @@ fn fill_while_bad_token() {
     assert_ne!(bad_token.len(), setup.input_token.len());
 
     setup
-        .fill_output_manual(&setup.owner_address.clone(), bad_token, 1u64, 1u64)
+        .fill_output_manual(&setup.owner_address.clone(), bad_token, 1u64, 1u64, 1u64)
         .assert_user_error(sc_swap_esdt::ERR_FILL_BAD_TOKEN);
 }
