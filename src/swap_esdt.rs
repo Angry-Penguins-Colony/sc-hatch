@@ -4,11 +4,9 @@ elrond_wasm::imports!();
 
 pub const ERR_NOT_OWNER: &str = "Endpoint can only be called by owner";
 
-pub const ERR_SWAP_BAD_NONCE: &str = "The token nonce sent is not the one expected";
 pub const ERR_SWAP_BAD_TOKEN: &str = "The token identifier sent is not the one expected";
 pub const ERR_SWAP_NO_OUTPUT_TOKEN: &str = "There is nothing to swap. The balance is empty.";
 
-pub const ERR_FILL_BAD_NONCE: &str = "The token nonce sent is not the one expected";
 pub const ERR_FILL_BAD_TOKEN: &str = "The token identifier sent is not the one expected";
 pub const ERR_FILL_BAD_PAYMENT: &str = "You can only fill with NFT.";
 
@@ -20,9 +18,6 @@ pub trait SwapEsdt {
     #[storage_mapper("input_token")]
     fn input_token(&self) -> SingleValueMapper<TokenIdentifier>;
 
-    #[storage_mapper("input_nonce")]
-    fn input_nonce(&self) -> SingleValueMapper<u64>;
-
     #[storage_mapper("output_token")]
     fn output_token(&self) -> SingleValueMapper<TokenIdentifier>;
 
@@ -30,40 +25,39 @@ pub trait SwapEsdt {
     fn available_output_nonce(&self, input_nonce: u64) -> VecMapper<u64>;
 
     #[init]
-    fn init(&self, input_token: TokenIdentifier, input_nonce: u64, output_token: TokenIdentifier) {
+    fn init(&self, input_token: TokenIdentifier, output_token: TokenIdentifier) {
         self.input_token().set(input_token);
-        self.input_nonce().set(input_nonce);
         self.output_token().set(output_token);
     }
 
     #[endpoint(hatch)]
     #[payable("*")]
-    fn swap(
-        &self,
-        #[payment] payment: BigUint,
-        #[payment_token] token: TokenIdentifier,
-        #[payment_nonce] nonce: u64,
-    ) {
-        require!(token == self.input_token().get(), ERR_SWAP_BAD_TOKEN);
-        require!(nonce == self.input_nonce().get(), ERR_SWAP_BAD_NONCE);
+    fn swap(&self, #[payment_multi] payments: ManagedVec<EsdtTokenPayment<Self::Api>>) {
+        for payment in payments.iter() {
+            let token = payment.token_identifier;
+            let nonce = payment.token_nonce;
+            let amount = payment.amount;
 
-        for _ in 0u64..payment.to_u64().unwrap() {
-            let nonce = self.get_random_nonce(nonce);
+            require!(token == self.input_token().get(), ERR_SWAP_BAD_TOKEN);
 
-            let output_balance = self
-                .blockchain()
-                .get_sc_balance(&self.output_token().get(), nonce);
+            for _ in 0u64..amount.to_u64().unwrap() {
+                let nonce = self.get_random_nonce(nonce);
 
-            require!(output_balance >= payment, ERR_SWAP_NO_OUTPUT_TOKEN);
+                let output_balance = self
+                    .blockchain()
+                    .get_sc_balance(&self.output_token().get(), nonce);
 
-            let caller = self.blockchain().get_caller();
-            self.send().direct(
-                &caller,
-                &self.output_token().get(),
-                nonce,
-                &BigUint::from(1u32),
-                &[],
-            );
+                require!(output_balance >= amount, ERR_SWAP_NO_OUTPUT_TOKEN);
+
+                let caller = self.blockchain().get_caller();
+                self.send().direct(
+                    &caller,
+                    &self.output_token().get(),
+                    nonce,
+                    &BigUint::from(1u32),
+                    &[],
+                );
+            }
         }
     }
 
@@ -84,8 +78,8 @@ pub trait SwapEsdt {
 
     #[endpoint]
     #[only_owner]
-    fn claim_inputs_tokens(&self) {
-        self.claim_tokens(&self.input_token().get(), self.input_nonce().get());
+    fn claim_inputs_tokens(&self, nonce: u64) {
+        self.claim_tokens(&self.input_token().get(), nonce);
     }
 
     #[endpoint]

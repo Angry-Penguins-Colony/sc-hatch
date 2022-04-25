@@ -43,13 +43,7 @@ where
             token_id,
             nonce,
             &rust_biguint!(balance),
-            |sc| {
-                sc.swap(
-                    sc.call_value().esdt_value(),
-                    sc.call_value().token(),
-                    sc.call_value().esdt_token_nonce(),
-                )
-            },
+            |sc| sc.swap(sc.call_value().all_esdt_transfers()),
         );
     }
 
@@ -100,13 +94,13 @@ where
     }
 
     #[allow(dead_code)]
-    pub fn claim_inputs(&mut self, address: &Address) -> TxResult {
+    pub fn claim_inputs(&mut self, address: &Address, nonce: u64) -> TxResult {
         return self.blockchain_wrapper.execute_tx(
             address,
             &self.contract_wrapper,
             &rust_biguint!(0),
             |sc| {
-                sc.claim_inputs_tokens();
+                sc.claim_inputs_tokens(nonce);
             },
         );
     }
@@ -152,7 +146,6 @@ where
         .execute_tx(&owner_address, &cf_wrapper, &rust_zero, |sc| {
             sc.init(
                 TokenIdentifier::from_esdt_bytes(&input_token),
-                input_nonce,
                 TokenIdentifier::from_esdt_bytes(&output_token),
             );
         })

@@ -88,18 +88,6 @@ fn should_swap_five() {
 }
 
 #[test]
-fn should_err_bad_nonce() {
-    let mut setup = setup_contract(sc_swap_esdt::contract_obj);
-
-    setup.fill_output(1u64, 1u64, 1u64);
-
-    let token_id = setup.input_token;
-    setup
-        .swap(&token_id, setup.input_nonce + 1, 1)
-        .assert_user_error(sc_swap_esdt::ERR_SWAP_BAD_NONCE);
-}
-
-#[test]
 fn should_err_bad_token() {
     let mut setup = setup_contract(sc_swap_esdt::contract_obj);
 

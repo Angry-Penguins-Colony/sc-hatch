@@ -15,7 +15,9 @@ fn claim() {
         &{},
     );
 
-    setup.claim_inputs(&setup.owner_address.clone()).assert_ok();
+    setup
+        .claim_inputs(&setup.owner_address.clone(), setup.input_nonce)
+        .assert_ok();
 
     assert_eq!(
         setup.blockchain_wrapper.get_esdt_balance(
@@ -49,6 +51,6 @@ fn claim_while_not_owned() {
     );
 
     setup
-        .claim_inputs(&setup.user_lambda.clone())
+        .claim_inputs(&setup.user_lambda.clone(), setup.input_nonce)
         .assert_user_error(sc_swap_esdt::ERR_NOT_OWNER);
 }
