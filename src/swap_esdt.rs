@@ -32,32 +32,36 @@ pub trait SwapEsdt {
 
     #[endpoint(hatch)]
     #[payable("*")]
-    fn swap(&self, #[payment_multi] payments: ManagedVec<EsdtTokenPayment<Self::Api>>) {
+    fn multi_swap(&self, #[payment_multi] payments: ManagedVec<EsdtTokenPayment<Self::Api>>) {
         for payment in payments.iter() {
             let token = payment.token_identifier;
             let nonce = payment.token_nonce;
             let amount = payment.amount;
 
-            require!(token == self.input_token().get(), ERR_SWAP_BAD_TOKEN);
+            self.swap(amount, token, nonce);
+        }
+    }
 
-            for _ in 0u64..amount.to_u64().unwrap() {
-                let nonce = self.get_random_nonce(nonce);
+    fn swap(&self, payment: BigUint, token: TokenIdentifier, nonce: u64) {
+        require!(token == self.input_token().get(), ERR_SWAP_BAD_TOKEN);
 
-                let output_balance = self
-                    .blockchain()
-                    .get_sc_balance(&self.output_token().get(), nonce);
+        for _ in 0u64..payment.to_u64().unwrap() {
+            let nonce = self.get_random_nonce(nonce);
 
-                require!(output_balance >= amount, ERR_SWAP_NO_OUTPUT_TOKEN);
+            let output_balance = self
+                .blockchain()
+                .get_sc_balance(&self.output_token().get(), nonce);
 
-                let caller = self.blockchain().get_caller();
-                self.send().direct(
-                    &caller,
-                    &self.output_token().get(),
-                    nonce,
-                    &BigUint::from(1u32),
-                    &[],
-                );
-            }
+            require!(output_balance >= payment, ERR_SWAP_NO_OUTPUT_TOKEN);
+
+            let caller = self.blockchain().get_caller();
+            self.send().direct(
+                &caller,
+                &self.output_token().get(),
+                nonce,
+                &BigUint::from(1u32),
+                &[],
+            );
         }
     }
 

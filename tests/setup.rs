@@ -2,7 +2,12 @@ use elrond_wasm::{
     contract_base::ContractBase,
     types::{Address, TokenIdentifier},
 };
-use elrond_wasm_debug::{rust_biguint, testing_framework::*, tx_mock::TxResult, DebugApi};
+use elrond_wasm_debug::{
+    rust_biguint,
+    testing_framework::*,
+    tx_mock::{TxInputESDT, TxResult},
+    DebugApi,
+};
 use sc_swap_esdt::SwapEsdt;
 
 #[allow(dead_code)]
@@ -28,6 +33,36 @@ where
     ContractObjBuilder: 'static + Copy + Fn() -> sc_swap_esdt::ContractObj<DebugApi>,
 {
     #[allow(dead_code)]
+    pub fn multi_swap(&mut self, tokens: &[(&[u8], u64, u64)]) -> TxResult {
+        let mut transfers = Vec::new();
+
+        for (token_id, nonce, balance) in tokens {
+            transfers.push(TxInputESDT {
+                token_identifier: token_id.to_vec(),
+                nonce: nonce.clone(),
+                value: rust_biguint!(balance.clone()),
+            })
+        }
+
+        for (token_id, nonce, balance) in tokens.iter() {
+            self.blockchain_wrapper.set_nft_balance(
+                &self.user_lambda,
+                token_id,
+                nonce.clone(),
+                &rust_biguint!(balance.clone()),
+                &{},
+            );
+        }
+
+        return self.blockchain_wrapper.execute_esdt_multi_transfer(
+            &self.user_lambda,
+            &self.contract_wrapper,
+            &transfers,
+            |sc| sc.multi_swap(sc.call_value().all_esdt_transfers()),
+        );
+    }
+
+    #[allow(dead_code)]
     pub fn swap(&mut self, token_id: &[u8], nonce: u64, balance: u64) -> TxResult {
         self.blockchain_wrapper.set_nft_balance(
             &self.user_lambda,
@@ -43,7 +78,7 @@ where
             token_id,
             nonce,
             &rust_biguint!(balance),
-            |sc| sc.swap(sc.call_value().all_esdt_transfers()),
+            |sc| sc.multi_swap(sc.call_value().all_esdt_transfers()),
         );
     }
 
