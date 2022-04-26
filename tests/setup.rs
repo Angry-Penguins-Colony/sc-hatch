@@ -87,14 +87,14 @@ where
         &mut self,
         address: &Address,
         token_id: &[u8],
-        nonce: u64,
+        output_nonce: u64,
         balance: u64,
         input_nonce: u64,
     ) -> TxResult {
         self.blockchain_wrapper.set_nft_balance(
             address,
             token_id,
-            nonce,
+            output_nonce,
             &rust_biguint!(balance),
             &{},
         );
@@ -103,7 +103,7 @@ where
             address,
             &self.contract_wrapper,
             token_id,
-            nonce,
+            output_nonce,
             &rust_biguint!(balance),
             |sc| {
                 sc.fill_output(
@@ -117,11 +117,11 @@ where
     }
 
     #[allow(dead_code)]
-    pub fn fill_output(&mut self, balance: u64, nonce: u64, input_nonce: u64) {
+    pub fn fill_output(&mut self, balance: u64, output_nonce: u64, input_nonce: u64) {
         self.fill_output_manual(
             &self.owner_address.clone(),
             &self.output_token.clone(),
-            nonce,
+            output_nonce,
             balance,
             input_nonce,
         )

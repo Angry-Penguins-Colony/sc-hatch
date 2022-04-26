@@ -22,6 +22,7 @@ pub trait SwapEsdt {
     fn output_token(&self) -> SingleValueMapper<TokenIdentifier>;
 
     #[storage_mapper("available_penguin_nonce")]
+    #[view]
     fn available_output_nonce(&self, input_nonce: u64) -> VecMapper<u64>;
 
     #[init]
@@ -48,11 +49,11 @@ pub trait SwapEsdt {
         for _ in 0u64..payment.to_u64().unwrap() {
             let nonce = self.get_random_nonce(nonce);
 
-            let output_balance = self
+            let output_token_balance = self
                 .blockchain()
                 .get_sc_balance(&self.output_token().get(), nonce);
 
-            require!(output_balance >= payment, ERR_SWAP_NO_OUTPUT_TOKEN);
+            require!(output_token_balance >= 1, ERR_SWAP_NO_OUTPUT_TOKEN);
 
             let caller = self.blockchain().get_caller();
             self.send().direct(

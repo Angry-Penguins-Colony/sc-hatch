@@ -7,6 +7,7 @@
 elrond_wasm_node::wasm_endpoints! {
     sc_swap_esdt
     (
+        available_output_nonce
         claim_inputs_tokens
         claim_outputs_tokens
         fill_output

@@ -42,6 +42,53 @@ fn should_swap() {
 }
 
 #[test]
+fn should_swap_twice() {
+    let mut setup = setup_contract(sc_swap_esdt::contract_obj);
+
+    setup.fill_output(1u64, 1u64, setup.input_nonce);
+    setup.fill_output(1u64, 2u64, setup.input_nonce);
+
+    let input_token = setup.input_token;
+    setup.swap(&input_token, setup.input_nonce, 2).assert_ok();
+
+    assert_eq!(
+        setup.blockchain_wrapper.get_esdt_balance(
+            &setup.user_lambda,
+            &input_token,
+            setup.input_nonce
+        ),
+        rust_biguint!(0)
+    );
+
+    assert_eq!(
+        setup.blockchain_wrapper.get_esdt_balance(
+            &setup.contract_wrapper.address_ref(),
+            &input_token,
+            setup.input_nonce
+        ),
+        rust_biguint!(2)
+    );
+
+    assert_eq!(
+        setup.blockchain_wrapper.get_esdt_balance(
+            &setup.user_lambda,
+            &setup.output_token.clone(),
+            1u64
+        ),
+        rust_biguint!(1)
+    );
+
+    assert_eq!(
+        setup.blockchain_wrapper.get_esdt_balance(
+            &setup.user_lambda,
+            &setup.output_token.clone(),
+            2u64
+        ),
+        rust_biguint!(1)
+    );
+}
+
+#[test]
 fn should_swap_five() {
     let mut setup = setup_contract(sc_swap_esdt::contract_obj);
 
